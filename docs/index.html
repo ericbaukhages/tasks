@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tasks — MCP-first personal task management</title>
+    <style>
+      :root {
+        --bg: #fafafa;
+        --fg: #111;
+        --muted: #666;
+        --accent: #2563eb;
+        --accent-hover: #1d4ed8;
+        --border: #ddd;
+        --card: #fff;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0d1117;
+          --fg: #f0f6fc;
+          --muted: #8b949e;
+          --accent: #58a6ff;
+          --accent-hover: #79c0ff;
+          --border: #30363d;
+          --card: #161b22;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+        line-height: 1.6;
+      }
+      a { color: var(--accent); }
+      a:hover { color: var(--accent-hover); }
+      header, section {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+      }
+      header { text-align: center; padding-top: 4rem; }
+      h1 { font-size: 3rem; margin: 0 0 0.5rem; letter-spacing: -0.03em; }
+      .tagline { font-size: 1.25rem; color: var(--muted); margin: 0 0 1.5rem; }
+      .cta {
+        display: inline-flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .btn {
+        display: inline-block;
+        padding: 0.75rem 1.25rem;
+        border-radius: 0.5rem;
+        text-decoration: none;
+        font-weight: 600;
+        border: 1px solid var(--border);
+      }
+      .btn.primary {
+        background: var(--accent);
+        color: #fff;
+        border-color: var(--accent);
+      }
+      .btn.primary:hover { background: var(--accent-hover); color: #fff; }
+      .btn.secondary { background: var(--card); color: var(--fg); }
+      .screenshot {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 0 1rem;
+      }
+      .screenshot img {
+        width: 100%;
+        border-radius: 0.75rem;
+        border: 1px solid var(--border);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      }
+      h2 { font-size: 1.75rem; margin-top: 3rem; }
+      .features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+      }
+      .feature {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        padding: 1.25rem;
+      }
+      .feature h3 { margin: 0 0 0.5rem; font-size: 1.1rem; }
+      .feature p { margin: 0; color: var(--muted); }
+      pre {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        overflow-x: auto;
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.9rem;
+      }
+      footer {
+        text-align: center;
+        color: var(--muted);
+        padding: 3rem 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Tasks</h1>
+      <p class="tagline">MCP-first personal task management.</p>
+      <div class="cta">
+        <a class="btn primary" href="https://github.com/ericbaukhages/tasks">View on GitHub</a>
+        <a class="btn secondary" href="https://github.com/ericbaukhages/tasks#readme">Read the README</a>
+      </div>
+    </header>
+
+    <div class="screenshot">
+      <img src="screenshot.svg" alt="Tasks web UI showing a list of outstanding tasks" />
+    </div>
+
+    <section>
+      <h2>What it is</h2>
+      <p>
+        Tasks is a small, fast, agent-friendly task manager. It gives you a clean web UI,
+        a structured HTTP API, and an MCP server so AI assistants can manage your tasks
+        alongside you — all sharing the same application core and SQLite database.
+      </p>
+
+      <h2>Features</h2>
+      <div class="features">
+        <div class="feature">
+          <h3>Web UI</h3>
+          <p>Create, complete, and delete tasks from a minimal React + Vite interface.</p>
+        </div>
+        <div class="feature">
+          <h3>HTTP API</h3>
+          <p>RESTful Fastify routes with validation and proper error status codes.</p>
+        </div>
+        <div class="feature">
+          <h3>MCP server</h3>
+          <p>Expose tasks to any MCP client over stdio with validated tool inputs.</p>
+        </div>
+        <div class="feature">
+          <h3>SQLite</h3>
+          <p>Built-in <code>node:sqlite</code> persistence — no native modules to compile.</p>
+        </div>
+      </div>
+
+      <h2>Quick start</h2>
+      <pre><code># Clone the repo
+git clone https://github.com/ericbaukhages/tasks.git
+cd tasks
+
+# Install dependencies
+npm install
+
+# Build and test
+npm run build
+npm run test
+
+# Start the API and web UI
+npm run serve
+npm run dev --workspace=web</code></pre>
+
+      <h2>Architecture</h2>
+      <pre><code>                    Web UI  (React + Vite)
+                       │
+                       ▼
+                  HTTP API  (Fastify)
+                       │
+                       ▼
+               Application Core  (TaskService)
+                  │         │
+                  ▼         ▼
+                Domain    Persistence  (SQLite via node:sqlite)
+
+              MCP Server  (stdio)
+                       │
+                       ▼
+               Application Core  (same TaskService)</code></pre>
+      <p>
+        The HTTP and MCP interfaces never touch the database directly. Both delegate to a
+        shared <code>TaskService</code> so behavior stays consistent whether a human or an
+        agent is driving.
+      </p>
+
+      <h2>AI usage</h2>
+      <p>
+        AI-assisted development is encouraged for this MCP-first project. Attribution is
+        included in commit messages that contain AI-generated or -assisted content. See the
+        <a href="https://github.com/ericbaukhages/tasks/blob/main/AGENTS.md">AGENTS.md</a> file.
+      </p>
+
+      <h2>License</h2>
+      <p>MIT — see the <a href="https://github.com/ericbaukhages/tasks/blob/main/LICENSE">LICENSE</a> file.</p>
+    </section>
+
+    <footer>
+      <p>Built by <a href="https://github.com/ericbaukhages">Eric Baukhages</a>.</p>
+    </footer>
+  </body>
+</html>

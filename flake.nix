@@ -51,6 +51,7 @@
             just
             git
             sqlite
+            python3
           ];
         };
       });

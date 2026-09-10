@@ -11,6 +11,7 @@ toolchain is used automatically.
 - `just mcp` — run the MCP server
 - `just dev-web` — start the web workspace dev server
 - `just check` — run `nix flake check`
+- `just preview-pages` — preview the GitHub Pages site locally at http://localhost:4000
 
 ## Attribution
 

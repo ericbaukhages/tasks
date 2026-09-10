@@ -18,3 +18,6 @@ dev-web:
 
 check:
 	nix flake check
+
+preview-pages:
+	nix develop -c python3 -m http.server 4000 --directory docs

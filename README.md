@@ -1,21 +1,38 @@
-# tasks
+# Tasks
 
 MCP-first personal task management.
 
-This is a small TypeScript task-management application with three interfaces:
+[![Tests](https://github.com/ericbaukhages/tasks/actions/workflows/ci.yml/badge.svg)](https://github.com/ericbaukhages/tasks/actions/workflows/ci.yml)
+[![GitHub Pages](https://img.shields.io/badge/site-GitHub%20Pages-blue)](https://ericbaukhages.github.io/tasks/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-- **Web UI** (React + Vite)
-- **HTTP API** (Fastify)
-- **MCP server** (`@modelcontextprotocol/sdk` over stdio)
+A small, fast, agent-friendly task manager with three interfaces over a single shared core:
 
-All interfaces talk to the same application core and SQLite persistence layer.
+- **Web UI** — React + Vite
+- **HTTP API** — Fastify
+- **MCP server** — stdio Model Context Protocol server for AI assistants
 
-## Development requirements
+All interfaces share the same application logic and SQLite persistence layer.
 
-- [Nix](https://nixos.org/download/) (recommended) **or** Node.js 22.13+ and npm
-- [just](https://github.com/casey/just) (optional, for recipes)
+![Tasks web UI screenshot](./docs/screenshot.svg)
 
-## Setup
+## Features
+
+- Create, view, complete, and soft-delete tasks
+- Toggle between outstanding and completed tasks in the web UI
+- RESTful HTTP API with structured errors
+- MCP server exposing `create_task`, `list_tasks`, `get_task`, `complete_task`, and `delete_task`
+- SQLite persistence via Node.js built-in `node:sqlite` — no native modules to compile
+- Clean domain/application/interface layering with comprehensive tests
+
+## Quick start
+
+### Requirements
+
+- [Nix](https://nixos.org/download/) (recommended) **or** Node.js **22.13+**
+- [just](https://github.com/casey/just) (optional)
+
+### Install
 
 With Nix:
 
@@ -24,68 +41,64 @@ nix develop
 npm install
 ```
 
-Without Nix, make sure you have Node.js 22.13+ (when `node:sqlite` became unflagged), then:
+Without Nix:
 
 ```bash
 npm install
 ```
 
-## Build and test
+### Build and test
 
 ```bash
 just build
 just test
+just lint
 ```
 
-Or with npm directly:
+Or directly with npm:
 
 ```bash
 npm run build
 npm run test
+npm run lint
 ```
 
-## Run the web application
+## Usage
 
-The web app expects the HTTP API on `http://localhost:3000`.
+### Web UI
 
-Terminal 1 — start the API:
+Start the API and the Vite dev server in two terminals:
 
 ```bash
-just serve
-# or: npm run serve
+just serve        # npm run serve
+just dev-web      # npm run dev --workspace=web
 ```
 
-Terminal 2 — start the Vite dev server:
+Open [http://localhost:5173](http://localhost:5173).
+
+### HTTP API
+
+The API runs on `http://localhost:3000`.
 
 ```bash
-just dev-web
-# or: npm run dev --workspace=web
+curl -X POST http://localhost:3000/tasks \
+  -H 'Content-Type: application/json' \
+  -d '{"description":"Buy groceries"}'
+
+curl 'http://localhost:3000/tasks?status=pending'
 ```
 
-Open `http://localhost:5173`.
+See `server/src/http/api.ts` for all routes.
 
-## Run the MCP server
+### MCP server
 
 ```bash
-just mcp
-# or: npm run mcp
+just mcp          # npm run mcp
 ```
 
-The server reads and writes the same SQLite database as the HTTP API. When `DB_PATH` is not set, the database is created next to the server module (`server/data/tasks.db`) so the path is stable regardless of which working directory launches the process.
+The server reads and writes the same SQLite database as the HTTP API. When `DB_PATH` is not set, the database is created at `server/data/tasks.db` relative to the server module so the path is stable regardless of working directory.
 
-## Connect the MCP server to a client
-
-### MCP Inspector
-
-```bash
-npx @modelcontextprotocol/inspector node server/dist/mcp/server.js
-```
-
-Then open the Inspector URL and try the `create_task`, `list_tasks`, `complete_task`, and `delete_task` tools.
-
-### Claude Desktop / other clients
-
-Add a server config that runs:
+#### Connect from an MCP client
 
 ```json
 {
@@ -98,39 +111,13 @@ Add a server config that runs:
 }
 ```
 
-## Example MCP interaction
+Or inspect it with the MCP Inspector:
 
-User: *Add "Replace the bathroom faucet" to my task list.*
-
-Agent calls:
-
-```json
-{
-  "name": "create_task",
-  "arguments": {
-    "description": "Replace the bathroom faucet"
-  }
-}
+```bash
+npx @modelcontextprotocol/inspector node server/dist/mcp/server.js
 ```
 
-Server responds with both human-readable text and structured JSON:
-
-```text
-Task 8d7c8b7c-...: Replace the bathroom faucet (pending) created 2026-09-09T12:34:56.789Z
-```
-
-```json
-{
-  "id": "8d7c8b7c-...",
-  "description": "Replace the bathroom faucet",
-  "status": "pending",
-  "createdAt": "2026-09-09T12:34:56.789Z"
-}
-```
-
-The task is now in SQLite and visible in the web UI.
-
-## Architectural overview
+## Architecture
 
 ```text
                     Web UI  (React + Vite)
@@ -156,44 +143,22 @@ The task is now in SQLite and visible in the web UI.
 Responsibilities:
 
 - **Domain** (`server/src/domain/task.ts`): task shape, statuses, and pure state transitions.
-- **Application** (`server/src/application/task-service.ts`): use-case orchestration; repository interface.
-- **Persistence** (`server/src/persistence/sqlite-task-repository.ts`): SQLite implementation of the repository interface using Node.js's built-in `node:sqlite`.
-- **HTTP interface** (`server/src/http/`): Fastify routes that validate input and delegate to the service.
-- **MCP interface** (`server/src/mcp/`): stdio MCP server that exposes meaningful tools and delegates to the service.
+- **Application** (`server/src/application/task-service.ts`): use-case orchestration and repository interface.
+- **Persistence** (`server/src/persistence/sqlite-task-repository.ts`): SQLite implementation using Node.js's built-in `node:sqlite`.
+- **HTTP interface** (`server/src/http/`): Fastify routes with `zod` validation.
+- **MCP interface** (`server/src/mcp/`): stdio MCP server with validated tools and structured responses.
 - **Web interface** (`web/src/`): React UI that calls the HTTP API.
 
-The HTTP and MCP interfaces never touch the database directly.
+Neither the HTTP nor the MCP interface touches the database directly.
 
-## Significant technical decisions
+## Project site
 
-- **No ORM, built-in SQLite.** Node.js's experimental `node:sqlite` handles persistence, so there is no native module to compile and no ORM abstraction.
-- **Soft deletes.** `docs/user-actions.md` requested soft deletes, so tasks get a `deleted_at` timestamp instead of being removed.
-- **Shared core, separate interfaces.** Both HTTP and MCP use the same `TaskService`, so behavior stays consistent whether a human or an agent is driving.
-- **stdio MCP transport.** Easy to test with the MCP Inspector and avoids port/CORS concerns.
-- **Minimal frontend.** The UI is intentionally plain: create, complete, delete, and toggle between outstanding and completed tasks.
-- **Validation at the boundary.** `zod` validates HTTP and MCP inputs before they reach the application core, and validates MCP tool outputs before they are returned to clients.
-- **Structured MCP responses.** MCP tools declare output schemas and return both readable text and `structuredContent`, so agents can act on IDs and statuses without parsing prose.
-
-## Bonus considerations (not implemented)
-
-A few natural extensions and how they might fit:
-
-- **Priorities / due dates / tags:** add columns to `tasks` and extend the domain types; keep validation in the HTTP/MCP boundary.
-- **Projects or lists:** introduce a `projects` table and a foreign key from `tasks`.
-- **Recurring tasks:** store recurrence rules on `tasks` and add a scheduled job that spawns the next instance.
-- **Task dependencies:** add a `task_dependencies` join table and reject completion cycles in the application service.
-- **Natural-language capture:** an MCP tool that parses free text into description + due date + tags before creating the task.
-- **CLI:** a small `bin/tasks.ts` script that reuses `TaskService`.
-- **Import/export:** add an MCP tool or HTTP endpoint that streams JSON/CSV through the service.
-
-## Final question: what would you keep, change, and leave alone?
-
-If this became the foundation for a broader personal productivity system:
-
-- **Keep:** the clean separation between domain, application, persistence, and interfaces. It is the main reason the system can grow without turning into a monolithic tangle.
-- **Change:** move from a single SQLite file to a migration-managed schema (e.g., `node-pg-migrate` or `drizzle-kit` migrations) once multi-user or sync requirements appear. Add authentication and per-user data isolation.
-- **Leave alone:** the MCP-first philosophy. Expose meaningful, task-oriented tools rather than generic database operations; that is the property that makes the system pleasant for both humans and agents.
+Visit the project page at [https://ericbaukhages.github.io/tasks/](https://ericbaukhages.github.io/tasks/) for an overview, screenshots, and links.
 
 ## AI usage
 
 AI-assisted development is encouraged for this MCP-first project. Attribution is included in commit messages that contain AI-generated or -assisted content. See [AGENTS.md](./AGENTS.md).
+
+## License
+
+MIT — see [LICENSE](./LICENSE).
