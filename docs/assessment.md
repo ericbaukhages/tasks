@@ -56,6 +56,30 @@ All claims above were confirmed:
 
 **Conclusion:** the assessment's verdict and bug list remain accurate at this commit.
 
+## Current status
+
+- **Date:** 2026-09-10
+- **Updated by:** opencode-go/kimi-k2.7-code
+
+The following issues have been remediated since the initial assessment:
+
+| Claim | Status | Commit | Notes |
+|-------|--------|--------|-------|
+| 1. HTTP errors all return 500 | **Fixed** | `c85f4d9` | Fastify `setErrorHandler` maps `ZodError` → 400 and `TaskNotFoundError` → 404. |
+| 2. MCP has zero input validation | **Fixed** | `6bed6f3` | MCP server now uses `McpServer`/`registerTool` with zod schemas. |
+| 3. `list_tasks` description lies | **Fixed** | `6bed6f3` | `list_tasks` now defaults to pending tasks, matching its description. |
+| 6. Node version docs contradict | **Fixed** | `d7ff11e` | README now says Node.js 22.13+ consistently; `engines` field added to all `package.json` files. |
+| 7. CORS + `0.0.0.0` bind | **Fixed** | `c85f4d9` | Server binds to `127.0.0.1`; `@fastify/cors` removed. |
+| 8. Whitespace-only descriptions | **Fixed** | `c85f4d9` / `6bed6f3` | HTTP and MCP now trim before validating `min(1)`. |
+
+Remaining issues to address:
+
+- **Claim 4:** README architecture diagram still says `better-sqlite3` instead of `node:sqlite`.
+- **Claim 5:** `DB_PATH` defaults to a relative path, which is fragile when the MCP server is launched from a client with a different cwd.
+- **Claim 9:** No tests exist for the HTTP or MCP interface layers.
+- **Claim 10:** MCP tool output is still prose; could be structured JSON or `structuredContent`.
+- **Claim 11:** Minor issues (`nix flake check` is a no-op, impure domain clocks, no graceful HTTP shutdown, web test placeholder).
+
 ---
 
 *Assessment generated with the [opencode](https://opencode.ai) CLI harness using the opencode-go/glm-5.3 model.*
