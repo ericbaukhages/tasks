@@ -1,6 +1,18 @@
 import { DatabaseSync } from 'node:sqlite'
+import { z } from 'zod'
 import { TaskRepository } from '../application/task-service.js'
 import type { Task } from '../domain/task.js'
+
+const taskRowSchema = z.object({
+  id: z.string(),
+  description: z.string(),
+  status: z.enum(['pending', 'completed']),
+  created_at: z.string(),
+  completed_at: z.string().nullable(),
+  deleted_at: z.string().nullable(),
+})
+
+type TaskRow = z.infer<typeof taskRowSchema>
 
 const MIGRATION = `
 CREATE TABLE IF NOT EXISTS tasks (
@@ -13,20 +25,11 @@ CREATE TABLE IF NOT EXISTS tasks (
 );
 `
 
-interface TaskRow {
-  id: string
-  description: string
-  status: string
-  created_at: string
-  completed_at: string | null
-  deleted_at: string | null
-}
-
 function rowToTask(row: TaskRow): Task {
   return {
     id: row.id,
     description: row.description,
-    status: row.status as Task['status'],
+    status: row.status,
     createdAt: row.created_at,
     completedAt: row.completed_at ?? undefined,
     deletedAt: row.deleted_at ?? undefined,
@@ -81,8 +84,10 @@ export class SqliteTaskRepository implements TaskRepository {
   }
 
   getById(id: string): Task | undefined {
-    const row = this.getByIdStmt.get(id) as unknown as TaskRow | undefined
-    return row ? rowToTask(row) : undefined
+    const raw = this.getByIdStmt.get(id)
+    if (!raw) return undefined
+    const row = taskRowSchema.parse(raw)
+    return rowToTask(row)
   }
 
   list(options?: { status?: 'pending' | 'completed'; includeDeleted?: boolean }): Task[] {
@@ -100,7 +105,8 @@ export class SqliteTaskRepository implements TaskRepository {
 
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
     const stmt = this.db.prepare(`SELECT * FROM tasks ${where} ORDER BY created_at DESC`)
-    const rows = stmt.all(...params) as unknown as TaskRow[]
+    const rawRows = stmt.all(...params)
+    const rows = rawRows.map((raw) => taskRowSchema.parse(raw))
 
     return rows.map(rowToTask)
   }

@@ -4,6 +4,9 @@ build:
 test:
 	nix develop -c npm run test
 
+lint:
+	nix develop -c npm run lint
+
 serve:
 	nix develop -c npm run serve
 

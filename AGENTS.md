@@ -6,6 +6,7 @@ toolchain is used automatically.
 
 - `just build` — build the project
 - `just test` — run tests
+- `just lint` — run ESLint
 - `just serve` — start the server
 - `just mcp` — run the MCP server
 - `just dev-web` — start the web workspace dev server

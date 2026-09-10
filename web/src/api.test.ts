@@ -5,26 +5,28 @@ import type { Task } from './types.js'
 
 describe('web/api', () => {
   const originalFetch = globalThis.fetch
-  const originalWindow = (globalThis as { window?: unknown }).window
+  const originalWindow = Reflect.get(globalThis, 'window')
 
   beforeEach(() => {
-    ;(globalThis as { window: unknown }).window = {
+    Reflect.set(globalThis, 'window', {
       location: { origin: 'http://localhost:3000' },
-    }
+    })
   })
 
   afterEach(() => {
-    ;(globalThis as { fetch: typeof fetch }).fetch = originalFetch
-    ;(globalThis as { window?: unknown }).window = originalWindow
+    Reflect.set(globalThis, 'fetch', originalFetch)
+    Reflect.set(globalThis, 'window', originalWindow)
   })
 
-  function mockFetch(response: Partial<Response>) {
-    globalThis.fetch = (async () => response as Response) as typeof fetch
+  function mockFetch(response: Partial<Response> & { data?: unknown }) {
+    const status = response.status ?? (response.ok === false ? 500 : 200)
+    const body = response.data !== undefined ? JSON.stringify(response.data) : null
+    globalThis.fetch = async () => new Response(body, { status })
   }
 
   it('lists tasks with status filter', async () => {
     const tasks: Task[] = [{ id: '1', description: 'A', status: 'pending', createdAt: '2026-01-01' }]
-    mockFetch({ ok: true, json: async () => tasks })
+    mockFetch({ ok: true, data: tasks })
 
     const result = await listTasks('pending')
     assert.deepEqual(result, tasks)
@@ -32,7 +34,7 @@ describe('web/api', () => {
 
   it('gets a task', async () => {
     const task: Task = { id: '1', description: 'A', status: 'pending', createdAt: '2026-01-01' }
-    mockFetch({ ok: true, json: async () => task })
+    mockFetch({ ok: true, data: task })
 
     const result = await getTask('1')
     assert.deepEqual(result, task)
@@ -40,7 +42,7 @@ describe('web/api', () => {
 
   it('creates a task', async () => {
     const task: Task = { id: '1', description: 'A', status: 'pending', createdAt: '2026-01-01' }
-    mockFetch({ ok: true, json: async () => task })
+    mockFetch({ ok: true, data: task })
 
     const result = await createTask('A')
     assert.deepEqual(result, task)
@@ -48,7 +50,7 @@ describe('web/api', () => {
 
   it('completes a task', async () => {
     const task: Task = { id: '1', description: 'A', status: 'completed', createdAt: '2026-01-01' }
-    mockFetch({ ok: true, json: async () => task })
+    mockFetch({ ok: true, data: task })
 
     const result = await completeTask('1')
     assert.deepEqual(result, task)
@@ -56,14 +58,14 @@ describe('web/api', () => {
 
   it('deletes a task', async () => {
     const task: Task = { id: '1', description: 'A', status: 'pending', createdAt: '2026-01-01' }
-    mockFetch({ ok: true, json: async () => task })
+    mockFetch({ ok: true, data: task })
 
     const result = await deleteTask('1')
     assert.deepEqual(result, task)
   })
 
   it('throws on error response', async () => {
-    mockFetch({ ok: false, text: async () => 'Not found' })
+    mockFetch({ ok: false, data: 'Not found' })
 
     await assert.rejects(() => getTask('1'), /Not found/)
   })

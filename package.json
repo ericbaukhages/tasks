@@ -10,6 +10,7 @@
   "scripts": {
     "build": "npm run build --workspaces",
     "test": "npm run test --workspaces",
+    "lint": "eslint .",
     "serve": "npm run serve --workspace=server",
     "mcp": "npm run mcp --workspace=server"
   },
@@ -17,6 +18,9 @@
     "node": ">=22.13.0"
   },
   "devDependencies": {
-    "typescript": "^5.6.3"
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.10.0",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.70.0"
   }
 }
