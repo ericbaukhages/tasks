@@ -16,6 +16,9 @@ jobs:
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@v13
 
+      - name: Install dependencies
+        run: nix develop -c npm ci
+
       - name: Build
         run: nix develop -c npm run build
 
@@ -24,6 +27,9 @@ jobs:
 
       - name: Lint
         run: nix develop -c npm run lint
+
+      - name: Check formatting
+        run: nix develop -c npm run format:check
 
       - name: Flake check
         run: nix flake check

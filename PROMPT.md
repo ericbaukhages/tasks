@@ -22,19 +22,19 @@ The application must support basic task management.
 
 At minimum, a user should be able to:
 
-* Create a task
-* View a list of tasks
-* View an individual task
-* Mark a task as complete
-* Delete a task
+- Create a task
+- View a list of tasks
+- View an individual task
+- Mark a task as complete
+- Delete a task
 
 A task should have, at minimum:
 
-* An identifier
-* A description
-* A status
-* A creation timestamp
-* A completion timestamp, when applicable
+- An identifier
+- A description
+- A status
+- A creation timestamp
+- A completion timestamp, when applicable
 
 You may introduce additional fields if you believe they are useful, but avoid adding complexity without a clear reason.
 
@@ -46,11 +46,11 @@ Provide a simple web interface for interacting with the task system.
 
 The interface should make the basic task workflow straightforward:
 
-* See outstanding tasks
-* Create a task
-* Complete a task
-* Delete a task
-* View completed tasks
+- See outstanding tasks
+- Create a task
+- Complete a task
+- Delete a task
+- View completed tasks
 
 The visual design is not the primary focus of this exercise. We are more interested in usability and implementation quality than visual polish.
 
@@ -64,10 +64,10 @@ The MCP interface should provide tools corresponding to the application's core c
 
 At minimum, an agent should be able to:
 
-* Create a task
-* List tasks
-* Complete a task
-* Delete a task
+- Create a task
+- List tasks
+- Complete a task
+- Delete a task
 
 The MCP interface should return useful, structured information that an agent can understand and act upon.
 
@@ -81,13 +81,13 @@ The MCP server should not implement task-management logic independently of the r
 
 Use the following technologies:
 
-* **TypeScript**
-* **Node.js**
-* **Fastify**
-* **SQLite**
-* **React**
-* **Vite**
-* **Model Context Protocol TypeScript SDK**
+- **TypeScript**
+- **Node.js**
+- **Fastify**
+- **SQLite**
+- **React**
+- **Vite**
+- **Model Context Protocol TypeScript SDK**
 
 You may use supporting libraries where appropriate.
 
@@ -95,12 +95,12 @@ However, do not introduce additional frameworks or infrastructure simply because
 
 In particular:
 
-* An ORM is not required.
-* A cloud database is not required.
-* Cloud deployment is not required.
-* Authentication is not required.
-* The application only needs to support a single user.
-* The application only needs to run locally.
+- An ORM is not required.
+- A cloud database is not required.
+- Cloud deployment is not required.
+- Authentication is not required.
+- The application only needs to support a single user.
+- The application only needs to run locally.
 
 The application should be runnable on a developer's machine with reasonable setup instructions.
 
@@ -136,7 +136,7 @@ For example:
                             │
                             ▼
                           SQLite
-                            
+
                   ▲
                   │
              MCP Server
@@ -186,14 +186,14 @@ You may use documentation, specifications, debugging tools, AI assistants, and o
 
 The purpose of this exercise is to demonstrate your own understanding of:
 
-* TypeScript
-* HTTP applications
-* databases
-* application architecture
-* MCP
-* frontend development
-* debugging
-* technical decision-making
+- TypeScript
+- HTTP applications
+- databases
+- application architecture
+- MCP
+- frontend development
+- debugging
+- technical decision-making
 
 You should be able to explain the implementation and architectural decisions you made.
 
@@ -281,19 +281,19 @@ These are intentionally optional.
 
 If you have time, consider how the system might eventually support:
 
-* Task priorities
-* Due dates
-* Projects or lists
-* Tags
-* Recurring tasks
-* Task dependencies
-* Natural-language task capture
-* Searching and filtering
-* Agent-driven task planning
-* Multiple MCP clients
-* A command-line interface
-* Import/export
-* Integration with existing task-management systems
+- Task priorities
+- Due dates
+- Projects or lists
+- Tags
+- Recurring tasks
+- Task dependencies
+- Natural-language task capture
+- Searching and filtering
+- Agent-driven task planning
+- Multiple MCP clients
+- A command-line interface
+- Import/export
+- Integration with existing task-management systems
 
 You do **not** need to implement these features.
 

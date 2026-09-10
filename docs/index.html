@@ -25,24 +25,48 @@
           --card: #161b22;
         }
       }
-      * { box-sizing: border-box; }
+      * {
+        box-sizing: border-box;
+      }
       body {
         margin: 0;
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
         background: var(--bg);
         color: var(--fg);
         line-height: 1.6;
       }
-      a { color: var(--accent); }
-      a:hover { color: var(--accent-hover); }
-      header, section {
+      a {
+        color: var(--accent);
+      }
+      a:hover {
+        color: var(--accent-hover);
+      }
+      header,
+      section {
         max-width: 720px;
         margin: 0 auto;
         padding: 2rem 1rem;
       }
-      header { text-align: center; padding-top: 4rem; }
-      h1 { font-size: 3rem; margin: 0 0 0.5rem; letter-spacing: -0.03em; }
-      .tagline { font-size: 1.25rem; color: var(--muted); margin: 0 0 1.5rem; }
+      header {
+        text-align: center;
+        padding-top: 4rem;
+      }
+      h1 {
+        font-size: 3rem;
+        margin: 0 0 0.5rem;
+        letter-spacing: -0.03em;
+      }
+      .tagline {
+        font-size: 1.25rem;
+        color: var(--muted);
+        margin: 0 0 1.5rem;
+      }
       .cta {
         display: inline-flex;
         gap: 0.75rem;
@@ -62,8 +86,14 @@
         color: #fff;
         border-color: var(--accent);
       }
-      .btn.primary:hover { background: var(--accent-hover); color: #fff; }
-      .btn.secondary { background: var(--card); color: var(--fg); }
+      .btn.primary:hover {
+        background: var(--accent-hover);
+        color: #fff;
+      }
+      .btn.secondary {
+        background: var(--card);
+        color: var(--fg);
+      }
       .screenshot {
         max-width: 720px;
         margin: 0 auto;
@@ -73,9 +103,12 @@
         width: 100%;
         border-radius: 0.75rem;
         border: 1px solid var(--border);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
       }
-      h2 { font-size: 1.75rem; margin-top: 3rem; }
+      h2 {
+        font-size: 1.75rem;
+        margin-top: 3rem;
+      }
       .features {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -88,8 +121,14 @@
         border-radius: 0.75rem;
         padding: 1.25rem;
       }
-      .feature h3 { margin: 0 0 0.5rem; font-size: 1.1rem; }
-      .feature p { margin: 0; color: var(--muted); }
+      .feature h3 {
+        margin: 0 0 0.5rem;
+        font-size: 1.1rem;
+      }
+      .feature p {
+        margin: 0;
+        color: var(--muted);
+      }
       pre {
         background: var(--card);
         border: 1px solid var(--border);
@@ -114,7 +153,9 @@
       <p class="tagline">MCP-first personal task management.</p>
       <div class="cta">
         <a class="btn primary" href="https://github.com/ericbaukhages/tasks">View on GitHub</a>
-        <a class="btn secondary" href="https://github.com/ericbaukhages/tasks#readme">Read the README</a>
+        <a class="btn secondary" href="https://github.com/ericbaukhages/tasks#readme"
+          >Read the README</a
+        >
       </div>
     </header>
 
@@ -125,9 +166,9 @@
     <section>
       <h2>What it is</h2>
       <p>
-        Tasks is a small, fast, agent-friendly task manager. It gives you a clean web UI,
-        a structured HTTP API, and an MCP server so AI assistants can manage your tasks
-        alongside you — all sharing the same application core and SQLite database.
+        Tasks is a small, fast, agent-friendly task manager. It gives you a clean web UI, a
+        structured HTTP API, and an MCP server so AI assistants can manage your tasks alongside you
+        — all sharing the same application core and SQLite database.
       </p>
 
       <h2>Features</h2>
@@ -159,12 +200,13 @@ cd tasks
 npm install
 
 # Build and test
-npm run build
-npm run test
+just build
+just test
+just lint
 
 # Start the API and web UI
-npm run serve
-npm run dev --workspace=web</code></pre>
+just serve
+just dev-web</code></pre>
 
       <h2>Architecture</h2>
       <pre><code>                    Web UI  (React + Vite)
@@ -183,20 +225,23 @@ npm run dev --workspace=web</code></pre>
                        ▼
                Application Core  (same TaskService)</code></pre>
       <p>
-        The HTTP and MCP interfaces never touch the database directly. Both delegate to a
-        shared <code>TaskService</code> so behavior stays consistent whether a human or an
-        agent is driving.
+        The HTTP and MCP interfaces never touch the database directly. Both delegate to a shared
+        <code>TaskService</code> so behavior stays consistent whether a human or an agent is
+        driving.
       </p>
 
       <h2>AI usage</h2>
       <p>
-        AI-assisted development is encouraged for this MCP-first project. Attribution is
-        included in commit messages that contain AI-generated or -assisted content. See the
+        AI-assisted development is encouraged for this MCP-first project. Attribution is included in
+        commit messages that contain AI-generated or -assisted content. See the
         <a href="https://github.com/ericbaukhages/tasks/blob/main/AGENTS.md">AGENTS.md</a> file.
       </p>
 
       <h2>License</h2>
-      <p>MIT — see the <a href="https://github.com/ericbaukhages/tasks/blob/main/LICENSE">LICENSE</a> file.</p>
+      <p>
+        MIT — see the
+        <a href="https://github.com/ericbaukhages/tasks/blob/main/LICENSE">LICENSE</a> file.
+      </p>
     </section>
 
     <footer>

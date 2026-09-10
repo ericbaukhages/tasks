@@ -23,7 +23,7 @@ describe('http/api', () => {
   it('creates a task', async () => {
     const res = await app.inject({
       method: 'POST',
-      url: '/tasks',
+      url: '/api/tasks',
       payload: { description: 'Buy milk' },
     })
     assert.equal(res.statusCode, 200)
@@ -35,7 +35,7 @@ describe('http/api', () => {
   it('rejects empty descriptions with 400', async () => {
     const res = await app.inject({
       method: 'POST',
-      url: '/tasks',
+      url: '/api/tasks',
       payload: { description: '' },
     })
     assert.equal(res.statusCode, 400)
@@ -44,17 +44,17 @@ describe('http/api', () => {
   it('rejects whitespace-only descriptions with 400', async () => {
     const res = await app.inject({
       method: 'POST',
-      url: '/tasks',
+      url: '/api/tasks',
       payload: { description: '   ' },
     })
     assert.equal(res.statusCode, 400)
   })
 
-  it('lists pending tasks by default', async () => {
-    await app.inject({ method: 'POST', url: '/tasks', payload: { description: 'A' } })
-    await app.inject({ method: 'POST', url: '/tasks', payload: { description: 'B' } })
+  it('lists tasks by default', async () => {
+    await app.inject({ method: 'POST', url: '/api/tasks', payload: { description: 'A' } })
+    await app.inject({ method: 'POST', url: '/api/tasks', payload: { description: 'B' } })
 
-    const res = await app.inject({ method: 'GET', url: '/tasks?status=pending' })
+    const res = await app.inject({ method: 'GET', url: '/api/tasks?status=pending' })
     assert.equal(res.statusCode, 200)
     const body = JSON.parse(res.payload)
     assert.equal(body.length, 2)
@@ -63,14 +63,14 @@ describe('http/api', () => {
   it('filters tasks by status', async () => {
     const created = await app.inject({
       method: 'POST',
-      url: '/tasks',
+      url: '/api/tasks',
       payload: { description: 'A' },
     })
     const { id } = JSON.parse(created.payload)
-    await app.inject({ method: 'POST', url: `/tasks/${id}/complete` })
+    await app.inject({ method: 'POST', url: `/api/tasks/${id}/complete` })
 
-    const pending = await app.inject({ method: 'GET', url: '/tasks?status=pending' })
-    const completed = await app.inject({ method: 'GET', url: '/tasks?status=completed' })
+    const pending = await app.inject({ method: 'GET', url: '/api/tasks?status=pending' })
+    const completed = await app.inject({ method: 'GET', url: '/api/tasks?status=completed' })
 
     assert.equal(JSON.parse(pending.payload).length, 0)
     assert.equal(JSON.parse(completed.payload).length, 1)
@@ -79,12 +79,12 @@ describe('http/api', () => {
   it('gets a task by id', async () => {
     const created = await app.inject({
       method: 'POST',
-      url: '/tasks',
+      url: '/api/tasks',
       payload: { description: 'A' },
     })
     const { id } = JSON.parse(created.payload)
 
-    const res = await app.inject({ method: 'GET', url: `/tasks/${id}` })
+    const res = await app.inject({ method: 'GET', url: `/api/tasks/${id}` })
     assert.equal(res.statusCode, 200)
     assert.equal(JSON.parse(res.payload).description, 'A')
   })
@@ -92,32 +92,32 @@ describe('http/api', () => {
   it('returns 404 for unknown task', async () => {
     const res = await app.inject({
       method: 'GET',
-      url: '/tasks/00000000-0000-0000-0000-000000000000',
+      url: '/api/tasks/00000000-0000-0000-0000-000000000000',
     })
     assert.equal(res.statusCode, 404)
   })
 
   it('returns 400 for malformed uuid', async () => {
-    const res = await app.inject({ method: 'GET', url: '/tasks/not-a-uuid' })
+    const res = await app.inject({ method: 'GET', url: '/api/tasks/not-a-uuid' })
     assert.equal(res.statusCode, 400)
   })
 
   it('completes and deletes a task', async () => {
     const created = await app.inject({
       method: 'POST',
-      url: '/tasks',
+      url: '/api/tasks',
       payload: { description: 'A' },
     })
     const { id } = JSON.parse(created.payload)
 
-    const completeRes = await app.inject({ method: 'POST', url: `/tasks/${id}/complete` })
+    const completeRes = await app.inject({ method: 'POST', url: `/api/tasks/${id}/complete` })
     assert.equal(completeRes.statusCode, 200)
     assert.equal(JSON.parse(completeRes.payload).status, 'completed')
 
-    const deleteRes = await app.inject({ method: 'DELETE', url: `/tasks/${id}` })
+    const deleteRes = await app.inject({ method: 'DELETE', url: `/api/tasks/${id}` })
     assert.equal(deleteRes.statusCode, 200)
 
-    const getRes = await app.inject({ method: 'GET', url: `/tasks/${id}` })
+    const getRes = await app.inject({ method: 'GET', url: `/api/tasks/${id}` })
     assert.equal(getRes.statusCode, 404)
   })
 })

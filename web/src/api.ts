@@ -1,11 +1,12 @@
-import { Task } from './types.js'
+import { Task, TaskStatus } from '@tasks/types'
 
 const API = '/api'
 
-export async function listTasks(status?: 'pending' | 'completed'): Promise<Task[]> {
-  const url = new URL(`${API}/tasks`, window.location.origin)
-  if (status) url.searchParams.set('status', status)
-  const res = await fetch(url)
+export async function listTasks(status?: TaskStatus): Promise<Task[]> {
+  const params = new URLSearchParams()
+  if (status) params.set('status', status)
+  const query = params.toString()
+  const res = await fetch(`${API}/tasks${query ? `?${query}` : ''}`)
   if (!res.ok) throw new Error(await res.text())
   return res.json()
 }

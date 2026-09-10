@@ -1,6 +1,7 @@
 node_modules/
 dist/
-data/
+dist-test/
+/data/
 *.log
 *.db
 .env
@@ -9,4 +10,3 @@ coverage/
 *.tsbuildinfo
 web/vite.config.js
 web/vite.config.d.ts
-web/dist-test/

@@ -32,7 +32,10 @@ describe('domain/task', () => {
   it('completing an already completed task is idempotent', () => {
     const task = Task.createTask('Buy milk', fixedClock)
     const completed = Task.completeTask(task, fixedClock)
-    const again = Task.completeTask(completed, { ...fixedClock, now: () => '2026-09-11T12:00:00.000Z' })
+    const again = Task.completeTask(completed, {
+      ...fixedClock,
+      now: () => '2026-09-11T12:00:00.000Z',
+    })
     assert.equal(again.completedAt, completed.completedAt)
   })
 

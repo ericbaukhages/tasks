@@ -18,7 +18,12 @@ function assertToolResult(value: unknown): asserts value is ToolResult {
   if (value === null || typeof value !== 'object') {
     throw new Error('Expected ToolResult object')
   }
-  if (!('content' in value || 'structuredContent' in value || 'isError' in value || 'toolResult' in value)) {
+  if (!(
+    'content' in value ||
+    'structuredContent' in value ||
+    'isError' in value ||
+    'toolResult' in value
+  )) {
     throw new Error('Expected ToolResult shape')
   }
 }
@@ -34,7 +39,11 @@ function getStructured(res: ToolResult): Record<string, unknown> | undefined {
   return res.structuredContent
 }
 
-async function callTool(client: Client, name: string, args: Record<string, unknown>): Promise<ToolResult> {
+async function callTool(
+  client: Client,
+  name: string,
+  args: Record<string, unknown>,
+): Promise<ToolResult> {
   const res = await client.callTool({ name, arguments: args })
   assertToolResult(res)
   return res
@@ -75,7 +84,13 @@ describe('mcp/server', () => {
   it('lists tools', async () => {
     const tools = await client.listTools()
     const names = tools.tools.map((t) => t.name)
-    assert.deepEqual(names.sort(), ['complete_task', 'create_task', 'delete_task', 'get_task', 'list_tasks'])
+    assert.deepEqual(names.sort(), [
+      'complete_task',
+      'create_task',
+      'delete_task',
+      'get_task',
+      'list_tasks',
+    ])
   })
 
   it('creates a task', async () => {
@@ -97,7 +112,7 @@ describe('mcp/server', () => {
     assert.equal(res.isError, true)
   })
 
-  it('lists pending tasks by default', async () => {
+  it('lists tasks by default', async () => {
     await callTool(client, 'create_task', { description: 'A' })
     await callTool(client, 'create_task', { description: 'B' })
 
@@ -114,12 +129,16 @@ describe('mcp/server', () => {
     }
   })
 
+  function getTaskId(res: ToolResult): string {
+    const structured = getStructured(res)
+    assert.ok(structured && typeof structured === 'object')
+    assert.ok('id' in structured && typeof structured.id === 'string')
+    return structured.id
+  }
+
   it('filters by status', async () => {
     const created = await callTool(client, 'create_task', { description: 'A' })
-    const text = getText(created)
-    const match = text.match(/Task ([0-9a-f-]+):/)
-    assert.ok(match)
-    const id = match[1]
+    const id = getTaskId(created)
 
     await callTool(client, 'complete_task', { id })
 
@@ -134,10 +153,7 @@ describe('mcp/server', () => {
 
   it('gets, completes, and deletes a task', async () => {
     const created = await callTool(client, 'create_task', { description: 'A' })
-    const text = getText(created)
-    const match = text.match(/Task ([0-9a-f-]+):/)
-    assert.ok(match)
-    const id = match[1]
+    const id = getTaskId(created)
 
     const got = await callTool(client, 'get_task', { id })
     assert.equal(got.isError, undefined)

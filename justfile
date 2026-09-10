@@ -7,6 +7,12 @@ test:
 lint:
 	nix develop -c npm run lint
 
+format:
+	nix develop -c npm run format
+
+clean:
+	nix develop -c npm run clean
+
 serve:
 	nix develop -c npm run serve
 
@@ -14,7 +20,7 @@ mcp:
 	nix develop -c npm run mcp
 
 dev-web:
-	nix develop -c npm run dev --workspace=web
+	nix develop -c npm run dev-web
 
 check:
 	nix flake check

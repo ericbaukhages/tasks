@@ -1,15 +1,7 @@
 import { randomUUID } from 'node:crypto'
+import type { Task, TaskStatus } from '@tasks/types'
 
-export type TaskStatus = 'pending' | 'completed'
-
-export interface Task {
-  id: string
-  description: string
-  status: TaskStatus
-  createdAt: string
-  completedAt?: string
-  deletedAt?: string
-}
+export type { Task, TaskStatus }
 
 export interface TaskClock {
   uuid(): string
@@ -45,12 +37,4 @@ export function softDelete(task: Task, clock: TaskClock = defaultClock): Task {
     ...task,
     deletedAt: clock.now(),
   }
-}
-
-export function isPending(task: Task): boolean {
-  return task.status === 'pending' && !task.deletedAt
-}
-
-export function isCompleted(task: Task): boolean {
-  return task.status === 'completed' && !task.deletedAt
 }

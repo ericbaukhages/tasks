@@ -1,26 +1,19 @@
-import { mkdirSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { startHttpServer } from './api.js'
-
-const defaultDbPath = resolve(dirname(fileURLToPath(import.meta.url)), '../../data/tasks.db')
+import { defaultDbPath } from '../config.js'
+import { createTaskService } from '../application/bootstrap.js'
+import { buildApp } from './api.js'
 
 const port = Number(process.env.PORT ?? 3000)
-const dbPath = process.env.DB_PATH ?? defaultDbPath
+const dbPath = process.env.DB_PATH ?? defaultDbPath()
 
-mkdirSync(dirname(dbPath), { recursive: true })
+const { service, repo } = createTaskService(dbPath)
+const app = await buildApp(service, { logger: true })
 
-startHttpServer({ port, dbPath })
-  .then(({ app, repo }) => {
-    for (const signal of ['SIGINT', 'SIGTERM']) {
-      process.once(signal, async () => {
-        await app.close()
-        repo.close()
-        process.exit(0)
-      })
-    }
+await app.listen({ port, host: '127.0.0.1' })
+
+for (const signal of ['SIGINT', 'SIGTERM']) {
+  process.once(signal, async () => {
+    await app.close()
+    repo.close()
+    process.exit(0)
   })
-  .catch((err) => {
-    console.error(err)
-    process.exit(1)
-  })
+}

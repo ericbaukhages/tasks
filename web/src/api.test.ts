@@ -1,21 +1,13 @@
-import { describe, it, beforeEach, afterEach } from 'node:test'
+import { describe, it, afterEach } from 'node:test'
 import assert from 'node:assert/strict'
+import type { Task } from '@tasks/types'
 import { listTasks, getTask, createTask, completeTask, deleteTask } from './api.js'
-import type { Task } from './types.js'
 
 describe('web/api', () => {
   const originalFetch = globalThis.fetch
-  const originalWindow = Reflect.get(globalThis, 'window')
-
-  beforeEach(() => {
-    Reflect.set(globalThis, 'window', {
-      location: { origin: 'http://localhost:3000' },
-    })
-  })
 
   afterEach(() => {
     Reflect.set(globalThis, 'fetch', originalFetch)
-    Reflect.set(globalThis, 'window', originalWindow)
   })
 
   function mockFetch(response: Partial<Response> & { data?: unknown }) {
@@ -25,7 +17,9 @@ describe('web/api', () => {
   }
 
   it('lists tasks with status filter', async () => {
-    const tasks: Task[] = [{ id: '1', description: 'A', status: 'pending', createdAt: '2026-01-01' }]
+    const tasks: Task[] = [
+      { id: '1', description: 'A', status: 'pending', createdAt: '2026-01-01' },
+    ]
     mockFetch({ ok: true, data: tasks })
 
     const result = await listTasks('pending')

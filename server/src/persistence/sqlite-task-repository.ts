@@ -1,12 +1,13 @@
 import { DatabaseSync } from 'node:sqlite'
 import { z } from 'zod'
+import { taskStatusSchema } from '@tasks/types'
 import { TaskRepository } from '../application/task-service.js'
-import type { Task } from '../domain/task.js'
+import type { Task, TaskStatus } from '../domain/task.js'
 
 const taskRowSchema = z.object({
   id: z.string(),
   description: z.string(),
-  status: z.enum(['pending', 'completed']),
+  status: taskStatusSchema,
   created_at: z.string(),
   completed_at: z.string().nullable(),
   deleted_at: z.string().nullable(),
@@ -90,7 +91,7 @@ export class SqliteTaskRepository implements TaskRepository {
     return rowToTask(row)
   }
 
-  list(options?: { status?: 'pending' | 'completed'; includeDeleted?: boolean }): Task[] {
+  list(options?: { status?: TaskStatus; includeDeleted?: boolean }): Task[] {
     const conditions: string[] = []
     const params: (string | number)[] = []
 

@@ -15,7 +15,9 @@ toolchain is used automatically.
 
 ## Keeping the GitHub Pages site in sync
 
-The project page at `docs/index.html` is deployed automatically to GitHub Pages. When you update the web UI, features, architecture, or AI-usage policy, remember to update the corresponding content in `docs/index.html` (and `docs/screenshot.svg` if the UI changes) so the public site stays accurate.
+The project page at `docs/index.html` is deployed automatically to GitHub Pages. When you update the web UI, features, architecture, AI-usage policy, or README quick-start/commands, remember to update the corresponding content in `docs/index.html` (and `docs/screenshot.svg` if the UI changes) so the public site stays accurate.
+
+`docs/` is the public site: do not leave internal notes, assessments, or raw requirement documents there. Move those to `notes/`.
 
 ## Attribution
 

@@ -81,11 +81,11 @@ Open [http://localhost:5173](http://localhost:5173).
 The API runs on `http://localhost:3000`.
 
 ```bash
-curl -X POST http://localhost:3000/tasks \
+curl -X POST http://localhost:3000/api/tasks \
   -H 'Content-Type: application/json' \
   -d '{"description":"Buy groceries"}'
 
-curl 'http://localhost:3000/tasks?status=pending'
+curl 'http://localhost:3000/api/tasks?status=pending'
 ```
 
 See `server/src/http/api.ts` for all routes.

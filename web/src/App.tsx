@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
+import { Task, TaskStatus } from '@tasks/types'
 import { completeTask, createTask, deleteTask, listTasks } from './api.js'
-import { Task } from './types.js'
 
 export function App() {
   const [description, setDescription] = useState('')
   const [tasks, setTasks] = useState<Task[]>([])
-  const [filter, setFilter] = useState<'pending' | 'completed'>('pending')
+  const [filter, setFilter] = useState<TaskStatus>('pending')
   const [error, setError] = useState<string | null>(null)
 
   const load = async () => {
@@ -97,7 +97,12 @@ export function App() {
               marginBottom: 8,
             }}
           >
-            <span style={{ flex: 1, textDecoration: task.status === 'completed' ? 'line-through' : 'none' }}>
+            <span
+              style={{
+                flex: 1,
+                textDecoration: task.status === 'completed' ? 'line-through' : 'none',
+              }}
+            >
               {task.description}
             </span>
             <div style={{ display: 'flex', gap: 8 }}>

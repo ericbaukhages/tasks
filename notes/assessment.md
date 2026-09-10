@@ -17,22 +17,22 @@
 
 1. **Every HTTP error is a 500.** There is no `setErrorHandler`. Probed live: empty description → 500, bad enum → 500, unknown UUID → 500, malformed UUID → 500. Validation failures should be 400; not-found should be 404. `server/src/http/api.ts` throws `ZodError`/`TaskNotFoundError` and Fastify has no mapping.
 2. **MCP has zero input validation.** `create_task` with no arguments silently creates a task literally described `"undefined"` (`server/src/mcp/server.ts:97` — `String(undefined)`). `get_task` with no id → `"Task not found: undefined"`. The README's claim that "zod validates HTTP and MCP inputs" is **false for MCP** — inputs are raw casts. Root cause: using the low-level `Server` API with manual `String()` casts instead of `McpServer`/`registerTool` with zod schemas, which would validate for free.
-3. **`list_tasks` MCP description lies.** It says "Defaults to outstanding tasks," but the service's no-filter path returns *both* pending and completed (`server/src/persistence/sqlite-task-repository.ts:88`). An agent trusting the description gets wrong semantics. Fix the default or fix the description.
+3. **`list_tasks` MCP description lies.** It says "Defaults to outstanding tasks," but the service's no-filter path returns _both_ pending and completed (`server/src/persistence/sqlite-task-repository.ts:88`). An agent trusting the description gets wrong semantics. Fix the default or fix the description.
 
 ## Not-obvious issues
 
 4. **README architecture diagram says "better-sqlite3"** (`README.md:136`) — the code uses `node:sqlite`. Stale doc contradicting the decisions section two paragraphs later.
-5. **`DB_PATH` relative-path trap.** The Claude Desktop config in the README spawns the server with the *client's* cwd, so `./data/tasks.db` resolves elsewhere and the claimed "visible in the web UI" silently breaks. Should default to a path anchored to the module, or the config should set `DB_PATH` absolute.
+5. **`DB_PATH` relative-path trap.** The Claude Desktop config in the README spawns the server with the _client's_ cwd, so `./data/tasks.db` resolves elsewhere and the claimed "visible in the web UI" silently breaks. Should default to a path anchored to the module, or the config should set `DB_PATH` absolute.
 6. **Node version docs contradict** — "Node.js 22+" (`README.md:15`) vs. "Node.js 20+" (`README.md:27`). And `node:sqlite` is only unflagged on ≥22.13; early 22.x needs `--experimental-sqlite`. No `engines` field in `package.json` enforces any of this.
 7. **CORS `origin: true` + `host: '0.0.0.0'`** (`server/src/http/api.ts:41,46`): any webpage you visit can read and mutate your tasks via `localhost:3000` (there is no auth). The Vite proxy already handles dev, so CORS is gratuitous; the bind should be localhost.
-8. **Whitespace-only descriptions create empty tasks** — zod `min(1)` runs *before* the domain's `.trim()`, so `"   "` passes validation and trims to `""`.
+8. **Whitespace-only descriptions create empty tasks** — zod `min(1)` runs _before_ the domain's `.trim()`, so `"   "` passes validation and trims to `""`.
 9. **The test suite skips the layers where every bug above lives.** Fastify's `app.inject()` and the SDK client (used here to probe) make HTTP/MCP tests cheap — their absence is why the 500s and the "undefined" task shipped.
 10. **MCP output is prose, not structured data.** The prompt asks for "structured information an agent can act upon"; agents must regex IDs out of `"Task <uuid>: ..."`. `structuredContent` or JSON text would match the requirement better.
 11. **Minor:** `nix flake check` is a no-op quality gate (no checks defined); domain layer uses `randomUUID`/`new Date()` (impure, untestable clocks); no graceful shutdown for the HTTP server (WAL files dangle); web test script is an echo placeholder.
 
 ## Summary
 
-The *thinking* is right — separation, soft deletes, stdio transport, minimal deps, honest scope. But the prompt explicitly weights "API Design" and "MCP Design," and both interfaces fail edge-case handling in ways a couple of `inject()`-based tests would have caught. If this were submitted as-is, the architecture section would score well and the interface sections would lose points that were avoidable in an afternoon: an error handler (~10 lines), MCP zod validation (switch to `registerTool`), and three doc fixes.
+The _thinking_ is right — separation, soft deletes, stdio transport, minimal deps, honest scope. But the prompt explicitly weights "API Design" and "MCP Design," and both interfaces fail edge-case handling in ways a couple of `inject()`-based tests would have caught. If this were submitted as-is, the architecture section would score well and the interface sections would lose points that were avoidable in an afternoon: an error handler (~10 lines), MCP zod validation (switch to `registerTool`), and three doc fixes.
 
 ## Verification
 
@@ -63,19 +63,19 @@ All claims above were confirmed:
 
 The following issues have been remediated since the initial assessment:
 
-| Claim | Status | Commit | Notes |
-|-------|--------|--------|-------|
-| 1. HTTP errors all return 500 | **Fixed** | `c85f4d9` | Fastify `setErrorHandler` maps `ZodError` → 400 and `TaskNotFoundError` → 404. |
-| 2. MCP has zero input validation | **Fixed** | `6bed6f3` | MCP server now uses `McpServer`/`registerTool` with zod schemas. |
-| 3. `list_tasks` description lies | **Fixed** | `6bed6f3` | `list_tasks` now defaults to pending tasks, matching its description. |
-| 6. Node version docs contradict | **Fixed** | `d7ff11e` | README now says Node.js 22.13+ consistently; `engines` field added to all `package.json` files. |
-| 7. CORS + `0.0.0.0` bind | **Fixed** | `c85f4d9` | Server binds to `127.0.0.1`; `@fastify/cors` removed. |
-| 8. Whitespace-only descriptions | **Fixed** | `c85f4d9` / `6bed6f3` | HTTP and MCP now trim before validating `min(1)`. |
-| 4. README diagram says `better-sqlite3` | **Fixed** | `381d5d6` | Architecture diagram now says `node:sqlite`; matches the decisions section. |
-| 5. `DB_PATH` relative-path trap | **Fixed** | `381d5d6` | HTTP and MCP entry points default `DB_PATH` to a path anchored to the server module (`server/data/tasks.db`), independent of the client's cwd. |
-| 9. No HTTP/MCP tests | **Fixed** | `381d5d6` | Added `http/api.test.ts` (Fastify `inject`) and `mcp/server.test.ts` (SDK client over stdio). Test count went from 6 to 22. |
-| 10. MCP output is prose | **Fixed** | `381d5d6` | All MCP tools now declare `outputSchema` and return `structuredContent`; text remains for human readability. |
-| 11. No graceful HTTP shutdown | **Fixed** | `381d5d6` | HTTP entry point registers `SIGINT`/`SIGTERM` handlers that close Fastify and the repository. |
+| Claim                                   | Status    | Commit                | Notes                                                                                                                                          |
+| --------------------------------------- | --------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. HTTP errors all return 500           | **Fixed** | `c85f4d9`             | Fastify `setErrorHandler` maps `ZodError` → 400 and `TaskNotFoundError` → 404.                                                                 |
+| 2. MCP has zero input validation        | **Fixed** | `6bed6f3`             | MCP server now uses `McpServer`/`registerTool` with zod schemas.                                                                               |
+| 3. `list_tasks` description lies        | **Fixed** | `6bed6f3`             | `list_tasks` now defaults to pending tasks, matching its description.                                                                          |
+| 6. Node version docs contradict         | **Fixed** | `d7ff11e`             | README now says Node.js 22.13+ consistently; `engines` field added to all `package.json` files.                                                |
+| 7. CORS + `0.0.0.0` bind                | **Fixed** | `c85f4d9`             | Server binds to `127.0.0.1`; `@fastify/cors` removed.                                                                                          |
+| 8. Whitespace-only descriptions         | **Fixed** | `c85f4d9` / `6bed6f3` | HTTP and MCP now trim before validating `min(1)`.                                                                                              |
+| 4. README diagram says `better-sqlite3` | **Fixed** | `381d5d6`             | Architecture diagram now says `node:sqlite`; matches the decisions section.                                                                    |
+| 5. `DB_PATH` relative-path trap         | **Fixed** | `381d5d6`             | HTTP and MCP entry points default `DB_PATH` to a path anchored to the server module (`server/data/tasks.db`), independent of the client's cwd. |
+| 9. No HTTP/MCP tests                    | **Fixed** | `381d5d6`             | Added `http/api.test.ts` (Fastify `inject`) and `mcp/server.test.ts` (SDK client over stdio). Test count went from 6 to 22.                    |
+| 10. MCP output is prose                 | **Fixed** | `381d5d6`             | All MCP tools now declare `outputSchema` and return `structuredContent`; text remains for human readability.                                   |
+| 11. No graceful HTTP shutdown           | **Fixed** | `381d5d6`             | HTTP entry point registers `SIGINT`/`SIGTERM` handlers that close Fastify and the repository.                                                  |
 
 | 11. `nix flake check` is a no-op | **Fixed** | `beca450` | Added a `checks.static-invariants` derivation that validates README content, Node engine requirements, and the absence of the web test placeholder. |
 | 11. Impure domain clocks | **Fixed** | `beca450` | `domain/task.ts` now accepts an injectable `TaskClock`; `defaultClock` is used in production and a deterministic clock is used in tests. |
@@ -107,4 +107,4 @@ All remediated claims were confirmed:
 
 ---
 
-*Assessment generated with the [opencode](https://opencode.ai) CLI harness using the opencode-go/glm-5.3 model.*
+_Assessment generated with the [opencode](https://opencode.ai) CLI harness using the opencode-go/glm-5.3 model._
