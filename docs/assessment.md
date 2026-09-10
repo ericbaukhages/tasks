@@ -34,6 +34,28 @@
 
 The *thinking* is right — separation, soft deletes, stdio transport, minimal deps, honest scope. But the prompt explicitly weights "API Design" and "MCP Design," and both interfaces fail edge-case handling in ways a couple of `inject()`-based tests would have caught. If this were submitted as-is, the architecture section would score well and the interface sections would lose points that were avoidable in an afternoon: an error handler (~10 lines), MCP zod validation (switch to `registerTool`), and three doc fixes.
 
+## Verification
+
+- **Date:** 2026-09-10
+- **Verified by:** opencode-go/kimi-k2.7-code
+- **Method:** Rebuilt both workspaces with `nix develop -c npm run build`, ran `nix develop -c npm run test` (6 passing), started the HTTP server on a temporary database and probed edge cases with `curl`, and connected to the MCP server through the SDK's own `StdioClientTransport` to exercise each tool.
+
+All claims above were confirmed:
+
+1. Empty description, bad enum, unknown UUID, and malformed UUID all returned HTTP 500.
+2. `create_task {}` created a task described `"undefined"`; `get_task {}` and `complete_task {}` returned `"Task not found: undefined"`.
+3. `list_tasks {}` returned both completed and pending tasks, contradicting the "Defaults to outstanding tasks" description.
+4. `README.md:136` still says "better-sqlite3" while the code uses `node:sqlite`.
+5. The default `./data/tasks.db` remains relative to the process cwd, so the README's Claude Desktop config resolves it from the client's cwd.
+6. README still lists both "Node.js 22+" and "Node.js 20+"; no `engines` field exists.
+7. `server/src/http/api.ts` still sets `origin: true` and binds `host: '0.0.0.0'`.
+8. `"   "` passed HTTP and MCP validation and produced a task with an empty description.
+9. Tests still cover only domain + service layers; no HTTP or MCP tests exist.
+10. MCP tool responses are still plain text from `formatTask`.
+11. `nix flake check` still evaluates only the devShell derivation; `domain/task.ts` still uses `randomUUID`/`new Date()`; the HTTP server still has no graceful shutdown; the web test script is still an `echo` placeholder.
+
+**Conclusion:** the assessment's verdict and bug list remain accurate at this commit.
+
 ---
 
 *Assessment generated with the [opencode](https://opencode.ai) CLI harness using the opencode-go/glm-5.3 model.*
