@@ -77,9 +77,9 @@ The following issues have been remediated since the initial assessment:
 | 10. MCP output is prose | **Fixed** | `381d5d6` | All MCP tools now declare `outputSchema` and return `structuredContent`; text remains for human readability. |
 | 11. No graceful HTTP shutdown | **Fixed** | `381d5d6` | HTTP entry point registers `SIGINT`/`SIGTERM` handlers that close Fastify and the repository. |
 
-| 11. `nix flake check` is a no-op | **Fixed** | (current) | Added a `checks.static-invariants` derivation that validates README content, Node engine requirements, and the absence of the web test placeholder. |
-| 11. Impure domain clocks | **Fixed** | (current) | `domain/task.ts` now accepts an injectable `TaskClock`; `defaultClock` is used in production and a deterministic clock is used in tests. |
-| 11. Web test placeholder | **Fixed** | (current) | Added `web/src/api.test.ts` and a `tsconfig.test.json`; `web/package.json` test script now compiles and runs real tests. |
+| 11. `nix flake check` is a no-op | **Fixed** | `beca450` | Added a `checks.static-invariants` derivation that validates README content, Node engine requirements, and the absence of the web test placeholder. |
+| 11. Impure domain clocks | **Fixed** | `beca450` | `domain/task.ts` now accepts an injectable `TaskClock`; `defaultClock` is used in production and a deterministic clock is used in tests. |
+| 11. Web test placeholder | **Fixed** | `beca450` | Added `web/src/api.test.ts` and a `tsconfig.test.json`; `web/package.json` test script now compiles and runs real tests. |
 
 Remaining issues to address:
 
