@@ -34,11 +34,7 @@ export async function registerRoutes(app: FastifyInstance, service: TaskService)
   })
 }
 
-export async function startHttpServer(args: { port: number; dbPath: string }) {
-  const repo = new SqliteTaskRepository(args.dbPath)
-  const service = new TaskService(repo)
-  const app = Fastify({ logger: true })
-
+export function setupErrorHandler(app: FastifyInstance) {
   app.setErrorHandler((error, _request, reply) => {
     if (error instanceof z.ZodError) {
       return reply.status(400).send({
@@ -61,10 +57,19 @@ export async function startHttpServer(args: { port: number; dbPath: string }) {
       message,
     })
   })
+}
 
-  await app.register(async (api) => {
-    await registerRoutes(api, service)
-  }, { prefix: '/api' })
+export async function buildApp(service: TaskService, options?: { logger?: boolean }) {
+  const app = Fastify({ logger: options?.logger ?? false })
+  setupErrorHandler(app)
+  await registerRoutes(app, service)
+  return app
+}
+
+export async function startHttpServer(args: { port: number; dbPath: string }) {
+  const repo = new SqliteTaskRepository(args.dbPath)
+  const service = new TaskService(repo)
+  const app = await buildApp(service, { logger: true })
 
   await app.listen({ port: args.port, host: '127.0.0.1' })
   return { app, service, repo }

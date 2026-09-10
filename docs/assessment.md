@@ -71,14 +71,37 @@ The following issues have been remediated since the initial assessment:
 | 6. Node version docs contradict | **Fixed** | `d7ff11e` | README now says Node.js 22.13+ consistently; `engines` field added to all `package.json` files. |
 | 7. CORS + `0.0.0.0` bind | **Fixed** | `c85f4d9` | Server binds to `127.0.0.1`; `@fastify/cors` removed. |
 | 8. Whitespace-only descriptions | **Fixed** | `c85f4d9` / `6bed6f3` | HTTP and MCP now trim before validating `min(1)`. |
+| 4. README diagram says `better-sqlite3` | **Fixed** | (current) | Architecture diagram now says `node:sqlite`; matches the decisions section. |
+| 5. `DB_PATH` relative-path trap | **Fixed** | (current) | HTTP and MCP entry points default `DB_PATH` to a path anchored to the server module (`server/data/tasks.db`), independent of the client's cwd. |
+| 9. No HTTP/MCP tests | **Fixed** | (current) | Added `http/api.test.ts` (Fastify `inject`) and `mcp/server.test.ts` (SDK client over stdio). Test count went from 6 to 22. |
+| 10. MCP output is prose | **Fixed** | (current) | All MCP tools now declare `outputSchema` and return `structuredContent`; text remains for human readability. |
+| 11. No graceful HTTP shutdown | **Fixed** | (current) | HTTP entry point registers `SIGINT`/`SIGTERM` handlers that close Fastify and the repository. |
 
 Remaining issues to address:
 
-- **Claim 4:** README architecture diagram still says `better-sqlite3` instead of `node:sqlite`.
-- **Claim 5:** `DB_PATH` defaults to a relative path, which is fragile when the MCP server is launched from a client with a different cwd.
-- **Claim 9:** No tests exist for the HTTP or MCP interface layers.
-- **Claim 10:** MCP tool output is still prose; could be structured JSON or `structuredContent`.
-- **Claim 11:** Minor issues (`nix flake check` is a no-op, impure domain clocks, no graceful HTTP shutdown, web test placeholder).
+- **Claim 11 (partial):** `nix flake check` is still a no-op (no checks defined in `flake.nix`).
+- **Claim 11 (partial):** Domain layer still uses `randomUUID`/`new Date()` (impure, untestable clocks).
+- **Claim 11 (partial):** Web test script is still an `echo` placeholder.
+
+## Updated verification
+
+- **Date:** 2026-09-10
+- **Verified by:** opencode-go/kimi-k2.7-code
+- **Method:** Rebuilt both workspaces with `nix develop -c npm run build`, ran `nix develop -c npm run test` (22 passing, including new HTTP and MCP interface tests), and probed the MCP server with a standalone SDK client script.
+
+All remediated claims were confirmed:
+
+1. HTTP validation and not-found errors now return 400/404 (verified by `http/api.test.ts`).
+2. MCP `create_task {}` now returns a validation error instead of creating an "undefined" task.
+3. MCP `list_tasks {}` now defaults to pending tasks only.
+4. `README.md:136` now says `node:sqlite`.
+5. Default `DB_PATH` is now anchored to the server module; launching the MCP server from a different cwd no longer loses the database.
+6. README consistently says Node.js 22.13+; `engines` fields are present.
+7. `server/src/http/api.ts` binds `127.0.0.1` and no longer enables CORS.
+8. `"   "` is rejected by both HTTP and MCP.
+9. HTTP and MCP interface tests exist and pass.
+10. MCP tool responses include `structuredContent` matching their declared output schemas.
+11. The HTTP server now has a graceful shutdown handler; the remaining minor issues (`nix flake check`, impure domain clocks, web test placeholder) are still present.
 
 ---
 

@@ -71,7 +71,7 @@ just mcp
 # or: npm run mcp
 ```
 
-The server reads and writes the same SQLite database as the HTTP API (default: `./data/tasks.db`).
+The server reads and writes the same SQLite database as the HTTP API. When `DB_PATH` is not set, the database is created next to the server module (`server/data/tasks.db`) so the path is stable regardless of which working directory launches the process.
 
 ## Connect the MCP server to a client
 
@@ -113,10 +113,19 @@ Agent calls:
 }
 ```
 
-Server responds:
+Server responds with both human-readable text and structured JSON:
 
 ```text
 Task 8d7c8b7c-...: Replace the bathroom faucet (pending) created 2026-09-09T12:34:56.789Z
+```
+
+```json
+{
+  "id": "8d7c8b7c-...",
+  "description": "Replace the bathroom faucet",
+  "status": "pending",
+  "createdAt": "2026-09-09T12:34:56.789Z"
+}
 ```
 
 The task is now in SQLite and visible in the web UI.
@@ -133,7 +142,7 @@ The task is now in SQLite and visible in the web UI.
                Application Core  (TaskService)
                   │         │
                   ▼         ▼
-               Domain    Persistence  (SQLite via better-sqlite3)
+                Domain    Persistence  (SQLite via node:sqlite)
                             │
                             ▼
                           SQLite
@@ -162,7 +171,8 @@ The HTTP and MCP interfaces never touch the database directly.
 - **Shared core, separate interfaces.** Both HTTP and MCP use the same `TaskService`, so behavior stays consistent whether a human or an agent is driving.
 - **stdio MCP transport.** Easy to test with the MCP Inspector and avoids port/CORS concerns.
 - **Minimal frontend.** The UI is intentionally plain: create, complete, delete, and toggle between outstanding and completed tasks.
-- **Validation at the boundary.** `zod` validates HTTP and MCP inputs before they reach the application core.
+- **Validation at the boundary.** `zod` validates HTTP and MCP inputs before they reach the application core, and validates MCP tool outputs before they are returned to clients.
+- **Structured MCP responses.** MCP tools declare output schemas and return both readable text and `structuredContent`, so agents can act on IDs and statuses without parsing prose.
 
 ## Bonus considerations (not implemented)
 
