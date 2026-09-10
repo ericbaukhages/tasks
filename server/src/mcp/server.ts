@@ -1,80 +1,20 @@
-import { Server } from '@modelcontextprotocol/sdk/server/index.js'
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
-import {
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-  type Tool,
-} from '@modelcontextprotocol/sdk/types.js'
 import { mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
+import { z } from 'zod'
 import { TaskService, TaskNotFoundError } from '../application/task-service.js'
 import { SqliteTaskRepository } from '../persistence/sqlite-task-repository.js'
-
-const TOOLS: Tool[] = [
-  {
-    name: 'create_task',
-    description: 'Create a new task with a description.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        description: { type: 'string', description: 'What needs to be done' },
-      },
-      required: ['description'],
-    },
-  },
-  {
-    name: 'list_tasks',
-    description: 'List tasks. Defaults to outstanding tasks.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        status: {
-          type: 'string',
-          enum: ['pending', 'completed'],
-          description: 'Filter by status',
-        },
-      },
-    },
-  },
-  {
-    name: 'get_task',
-    description: 'Get a single task by its ID.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        id: { type: 'string', description: 'Task ID' },
-      },
-      required: ['id'],
-    },
-  },
-  {
-    name: 'complete_task',
-    description: 'Mark a task as completed.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        id: { type: 'string', description: 'Task ID' },
-      },
-      required: ['id'],
-    },
-  },
-  {
-    name: 'delete_task',
-    description: 'Soft-delete a task by its ID.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        id: { type: 'string', description: 'Task ID' },
-      },
-      required: ['id'],
-    },
-  },
-]
 
 function formatTask(task: { id: string; description: string; status: string; createdAt: string; completedAt?: string }) {
   return `Task ${task.id}: ${task.description} (${task.status}) created ${task.createdAt}${
     task.completedAt ? ` completed ${task.completedAt}` : ''
   }`
+}
+
+function handleError(err: unknown) {
+  const message = err instanceof TaskNotFoundError ? err.message : String(err)
+  return { content: [{ type: 'text' as const, text: `Error: ${message}` }], isError: true }
 }
 
 function startMcpServer(dbPath: string) {
@@ -83,53 +23,88 @@ function startMcpServer(dbPath: string) {
   const repo = new SqliteTaskRepository(dbPath)
   const service = new TaskService(repo)
 
-  const server = new Server(
-    { name: 'tasks-mcp-server', version: '0.1.0' },
-    { capabilities: { tools: {} } },
+  const server = new McpServer({ name: 'tasks-mcp-server', version: '0.1.0' })
+
+  server.registerTool(
+    'create_task',
+    {
+      description: 'Create a new task with a description.',
+      inputSchema: { description: z.string().trim().min(1) },
+    },
+    async ({ description }) => {
+      try {
+        const task = service.createTask(description)
+        return { content: [{ type: 'text' as const, text: formatTask(task) }] }
+      } catch (err) {
+        return handleError(err)
+      }
+    },
   )
 
-  server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: TOOLS }))
-
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    const { name, arguments: args } = request.params
-    try {
-      if (name === 'create_task') {
-        const description = String((args as Record<string, unknown>).description)
-        const task = service.createTask(description)
-        return { content: [{ type: 'text', text: formatTask(task) }] }
-      }
-
-      if (name === 'list_tasks') {
-        const status = (args as Record<string, unknown>).status as 'pending' | 'completed' | undefined
-        const tasks = service.listTasks(status ? { status } : undefined)
+  server.registerTool(
+    'list_tasks',
+    {
+      description: 'List tasks. Defaults to outstanding (pending) tasks.',
+      inputSchema: { status: z.enum(['pending', 'completed']).optional() },
+    },
+    async ({ status }) => {
+      try {
+        const tasks = service.listTasks(status ? { status } : { status: 'pending' })
         const text = tasks.length ? tasks.map(formatTask).join('\n') : 'No tasks found.'
-        return { content: [{ type: 'text', text }] }
+        return { content: [{ type: 'text' as const, text }] }
+      } catch (err) {
+        return handleError(err)
       }
+    },
+  )
 
-      if (name === 'get_task') {
-        const id = String((args as Record<string, unknown>).id)
+  server.registerTool(
+    'get_task',
+    {
+      description: 'Get a single task by its ID.',
+      inputSchema: { id: z.string().uuid() },
+    },
+    async ({ id }) => {
+      try {
         const task = service.getTask(id)
-        return { content: [{ type: 'text', text: formatTask(task) }] }
+        return { content: [{ type: 'text' as const, text: formatTask(task) }] }
+      } catch (err) {
+        return handleError(err)
       }
+    },
+  )
 
-      if (name === 'complete_task') {
-        const id = String((args as Record<string, unknown>).id)
+  server.registerTool(
+    'complete_task',
+    {
+      description: 'Mark a task as completed.',
+      inputSchema: { id: z.string().uuid() },
+    },
+    async ({ id }) => {
+      try {
         const task = service.completeTask(id)
-        return { content: [{ type: 'text', text: formatTask(task) }] }
+        return { content: [{ type: 'text' as const, text: formatTask(task) }] }
+      } catch (err) {
+        return handleError(err)
       }
+    },
+  )
 
-      if (name === 'delete_task') {
-        const id = String((args as Record<string, unknown>).id)
+  server.registerTool(
+    'delete_task',
+    {
+      description: 'Soft-delete a task by its ID.',
+      inputSchema: { id: z.string().uuid() },
+    },
+    async ({ id }) => {
+      try {
         const task = service.deleteTask(id)
-        return { content: [{ type: 'text', text: `Deleted ${formatTask(task)}` }] }
+        return { content: [{ type: 'text' as const, text: `Deleted ${formatTask(task)}` }] }
+      } catch (err) {
+        return handleError(err)
       }
-
-      throw new Error(`Unknown tool: ${name}`)
-    } catch (err) {
-      const message = err instanceof TaskNotFoundError ? err.message : String(err)
-      return { content: [{ type: 'text', text: `Error: ${message}` }], isError: true }
-    }
-  })
+    },
+  )
 
   return { server, repo }
 }
@@ -139,7 +114,7 @@ async function main() {
   const { server, repo } = startMcpServer(dbPath)
   const transport = new StdioServerTransport()
 
-  server.onclose = () => repo.close()
+  server.server.onclose = () => repo.close()
   await server.connect(transport)
 }
 
