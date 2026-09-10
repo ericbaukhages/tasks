@@ -1,17 +1,17 @@
 build:
-	npm run build
+	nix develop -c npm run build
 
 test:
-	npm run test
+	nix develop -c npm run test
 
 serve:
-	npm run serve
+	nix develop -c npm run serve
 
 mcp:
-	npm run mcp
+	nix develop -c npm run mcp
 
 dev-web:
-	npm run dev --workspace=web
+	nix develop -c npm run dev --workspace=web
 
 check:
 	nix flake check
