@@ -13,6 +13,10 @@ toolchain is used automatically.
 - `just check` — run `nix flake check`
 - `just preview-pages` — preview the GitHub Pages site locally at http://localhost:4000
 
+## Keeping the GitHub Pages site in sync
+
+The project page at `docs/index.html` is deployed automatically to GitHub Pages. When you update the web UI, features, architecture, or AI-usage policy, remember to update the corresponding content in `docs/index.html` (and `docs/screenshot.svg` if the UI changes) so the public site stays accurate.
+
 ## Attribution
 
 Please ensure, if you're assisting commits, that you include a disclaimer, with the current model and harness.
