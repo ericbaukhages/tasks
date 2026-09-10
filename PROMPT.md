@@ -180,9 +180,9 @@ You may introduce additional MCP tools if they provide meaningful functionality.
 
 ## Development Approach
 
-Build the application without AI-generated implementation code.
+AI-assisted development is expected and encouraged: this is an MCP-first application designed for both human and AI agent clients, so using AI tools while building it is entirely appropriate.
 
-You may use documentation, specifications, debugging tools, and other normal developer resources.
+You may use documentation, specifications, debugging tools, AI assistants, and other normal developer resources.
 
 The purpose of this exercise is to demonstrate your own understanding of:
 
