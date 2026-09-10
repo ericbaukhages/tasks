@@ -1,0 +1,39 @@
+# Project Assessment: Task Management System vs. PROMPT.md
+
+- **Date:** 2026-09-10
+- **Commit assessed:** `5350579` ("Implement task management system with HTTP, MCP, and web UI")
+- **Method:** Static review of all source, plus live execution — built both workspaces, ran the test suite, probed the running HTTP API with curl, and probed the MCP server through the SDK's own client.
+
+**Verdict: solid architecture and clean deliverables, undermined by real correctness bugs at the interface boundaries — exactly the layers the prompt emphasizes.**
+
+## Strengths
+
+- **Architecture delivers the diagram.** HTTP and MCP both delegate to a shared `TaskService`; neither touches SQLite. Layering is real, not ceremonial: `server/src/application/task-service.ts:16` is the single choke point both interfaces call.
+- **Sensible tech judgment.** `node:sqlite` avoids native builds; prepared statements, parameterized queries, WAL for concurrent HTTP+MCP processes. No ORM, per the prompt. Domain transitions are pure and idempotent (`server/src/domain/task.ts`).
+- **Deliverables complete.** All 7 README items including MCP example, bonus discussion, and the final question. MCP tool names mirror the prompt's suggested set. Commit attribution per `AGENTS.md`.
+- **Tests exist** for domain + service (6 passing), using real `:memory:` SQLite — honest integration, zero extra dependencies.
+
+## Obvious bugs (verified by execution)
+
+1. **Every HTTP error is a 500.** There is no `setErrorHandler`. Probed live: empty description → 500, bad enum → 500, unknown UUID → 500, malformed UUID → 500. Validation failures should be 400; not-found should be 404. `server/src/http/api.ts` throws `ZodError`/`TaskNotFoundError` and Fastify has no mapping.
+2. **MCP has zero input validation.** `create_task` with no arguments silently creates a task literally described `"undefined"` (`server/src/mcp/server.ts:97` — `String(undefined)`). `get_task` with no id → `"Task not found: undefined"`. The README's claim that "zod validates HTTP and MCP inputs" is **false for MCP** — inputs are raw casts. Root cause: using the low-level `Server` API with manual `String()` casts instead of `McpServer`/`registerTool` with zod schemas, which would validate for free.
+3. **`list_tasks` MCP description lies.** It says "Defaults to outstanding tasks," but the service's no-filter path returns *both* pending and completed (`server/src/persistence/sqlite-task-repository.ts:88`). An agent trusting the description gets wrong semantics. Fix the default or fix the description.
+
+## Not-obvious issues
+
+4. **README architecture diagram says "better-sqlite3"** (`README.md:136`) — the code uses `node:sqlite`. Stale doc contradicting the decisions section two paragraphs later.
+5. **`DB_PATH` relative-path trap.** The Claude Desktop config in the README spawns the server with the *client's* cwd, so `./data/tasks.db` resolves elsewhere and the claimed "visible in the web UI" silently breaks. Should default to a path anchored to the module, or the config should set `DB_PATH` absolute.
+6. **Node version docs contradict** — "Node.js 22+" (`README.md:15`) vs. "Node.js 20+" (`README.md:27`). And `node:sqlite` is only unflagged on ≥22.13; early 22.x needs `--experimental-sqlite`. No `engines` field in `package.json` enforces any of this.
+7. **CORS `origin: true` + `host: '0.0.0.0'`** (`server/src/http/api.ts:41,46`): any webpage you visit can read and mutate your tasks via `localhost:3000` (there is no auth). The Vite proxy already handles dev, so CORS is gratuitous; the bind should be localhost.
+8. **Whitespace-only descriptions create empty tasks** — zod `min(1)` runs *before* the domain's `.trim()`, so `"   "` passes validation and trims to `""`.
+9. **The test suite skips the layers where every bug above lives.** Fastify's `app.inject()` and the SDK client (used here to probe) make HTTP/MCP tests cheap — their absence is why the 500s and the "undefined" task shipped.
+10. **MCP output is prose, not structured data.** The prompt asks for "structured information an agent can act upon"; agents must regex IDs out of `"Task <uuid>: ..."`. `structuredContent` or JSON text would match the requirement better.
+11. **Minor:** `nix flake check` is a no-op quality gate (no checks defined); domain layer uses `randomUUID`/`new Date()` (impure, untestable clocks); no graceful shutdown for the HTTP server (WAL files dangle); web test script is an echo placeholder.
+
+## Summary
+
+The *thinking* is right — separation, soft deletes, stdio transport, minimal deps, honest scope. But the prompt explicitly weights "API Design" and "MCP Design," and both interfaces fail edge-case handling in ways a couple of `inject()`-based tests would have caught. If this were submitted as-is, the architecture section would score well and the interface sections would lose points that were avoidable in an afternoon: an error handler (~10 lines), MCP zod validation (switch to `registerTool`), and three doc fixes.
+
+---
+
+*Assessment generated with the [opencode](https://opencode.ai) CLI harness using the opencode-go/glm-5.3 model.*
