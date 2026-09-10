@@ -77,11 +77,13 @@ The following issues have been remediated since the initial assessment:
 | 10. MCP output is prose | **Fixed** | `381d5d6` | All MCP tools now declare `outputSchema` and return `structuredContent`; text remains for human readability. |
 | 11. No graceful HTTP shutdown | **Fixed** | `381d5d6` | HTTP entry point registers `SIGINT`/`SIGTERM` handlers that close Fastify and the repository. |
 
+| 11. `nix flake check` is a no-op | **Fixed** | (current) | Added a `checks.static-invariants` derivation that validates README content, Node engine requirements, and the absence of the web test placeholder. |
+| 11. Impure domain clocks | **Fixed** | (current) | `domain/task.ts` now accepts an injectable `TaskClock`; `defaultClock` is used in production and a deterministic clock is used in tests. |
+| 11. Web test placeholder | **Fixed** | (current) | Added `web/src/api.test.ts` and a `tsconfig.test.json`; `web/package.json` test script now compiles and runs real tests. |
+
 Remaining issues to address:
 
-- **Claim 11 (partial):** `nix flake check` is still a no-op (no checks defined in `flake.nix`).
-- **Claim 11 (partial):** Domain layer still uses `randomUUID`/`new Date()` (impure, untestable clocks).
-- **Claim 11 (partial):** Web test script is still an `echo` placeholder.
+_None — all assessment claims have been remediated._
 
 ## Updated verification
 
@@ -99,9 +101,9 @@ All remediated claims were confirmed:
 6. README consistently says Node.js 22.13+; `engines` fields are present.
 7. `server/src/http/api.ts` binds `127.0.0.1` and no longer enables CORS.
 8. `"   "` is rejected by both HTTP and MCP.
-9. HTTP and MCP interface tests exist and pass.
+9. HTTP and MCP interface tests exist and pass (25 server tests, 6 web tests).
 10. MCP tool responses include `structuredContent` matching their declared output schemas.
-11. The HTTP server now has a graceful shutdown handler; the remaining minor issues (`nix flake check`, impure domain clocks, web test placeholder) are still present.
+11. The HTTP server has a graceful shutdown handler, `nix flake check` now runs a real static-invariants check, the domain layer accepts an injectable clock, and the web test script runs real tests.
 
 ---
 

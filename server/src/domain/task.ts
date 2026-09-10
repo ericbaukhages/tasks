@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto'
+
 export type TaskStatus = 'pending' | 'completed'
 
 export interface Task {
@@ -9,31 +11,39 @@ export interface Task {
   deletedAt?: string
 }
 
-import { randomUUID } from 'node:crypto'
+export interface TaskClock {
+  uuid(): string
+  now(): string
+}
 
-export function createTask(description: string): Task {
+export const defaultClock: TaskClock = {
+  uuid: () => randomUUID(),
+  now: () => new Date().toISOString(),
+}
+
+export function createTask(description: string, clock: TaskClock = defaultClock): Task {
   return {
-    id: randomUUID(),
+    id: clock.uuid(),
     description: description.trim(),
     status: 'pending',
-    createdAt: new Date().toISOString(),
+    createdAt: clock.now(),
   }
 }
 
-export function completeTask(task: Task): Task {
+export function completeTask(task: Task, clock: TaskClock = defaultClock): Task {
   if (task.status === 'completed') return task
   return {
     ...task,
     status: 'completed',
-    completedAt: new Date().toISOString(),
+    completedAt: clock.now(),
   }
 }
 
-export function softDelete(task: Task): Task {
+export function softDelete(task: Task, clock: TaskClock = defaultClock): Task {
   if (task.deletedAt) return task
   return {
     ...task,
-    deletedAt: new Date().toISOString(),
+    deletedAt: clock.now(),
   }
 }
 

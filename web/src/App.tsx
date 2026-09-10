@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { completeTask, createTask, deleteTask, listTasks } from './api'
-import { Task } from './types'
+import { completeTask, createTask, deleteTask, listTasks } from './api.js'
+import { Task } from './types.js'
 
 export function App() {
   const [description, setDescription] = useState('')

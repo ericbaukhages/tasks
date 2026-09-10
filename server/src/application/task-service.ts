@@ -14,10 +14,13 @@ export class TaskNotFoundError extends Error {
 }
 
 export class TaskService {
-  constructor(private readonly repo: TaskRepository) {}
+  constructor(
+    private readonly repo: TaskRepository,
+    private readonly clock: Task.TaskClock = Task.defaultClock,
+  ) {}
 
   createTask(description: string): Task.Task {
-    const task = Task.createTask(description)
+    const task = Task.createTask(description, this.clock)
     this.repo.save(task)
     return task
   }
@@ -34,14 +37,14 @@ export class TaskService {
 
   completeTask(id: string): Task.Task {
     const task = this.getTask(id)
-    const completed = Task.completeTask(task)
+    const completed = Task.completeTask(task, this.clock)
     this.repo.update(completed)
     return completed
   }
 
   deleteTask(id: string): Task.Task {
     const task = this.getTask(id)
-    const deleted = Task.softDelete(task)
+    const deleted = Task.softDelete(task, this.clock)
     this.repo.update(deleted)
     return deleted
   }
