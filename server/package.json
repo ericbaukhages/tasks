@@ -9,6 +9,9 @@
     "serve": "node dist/http/server.js",
     "mcp": "node dist/mcp/server.js"
   },
+  "engines": {
+    "node": ">=22.13.0"
+  },
   "dependencies": {
     "@fastify/cors": "^10.0.1",
     "@modelcontextprotocol/sdk": "^1.6.0",

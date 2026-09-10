@@ -12,7 +12,7 @@ All interfaces talk to the same application core and SQLite persistence layer.
 
 ## Development requirements
 
-- [Nix](https://nixos.org/download/) (recommended) **or** Node.js 22+ and npm
+- [Nix](https://nixos.org/download/) (recommended) **or** Node.js 22.13+ and npm
 - [just](https://github.com/casey/just) (optional, for recipes)
 
 ## Setup
@@ -24,7 +24,7 @@ nix develop
 npm install
 ```
 
-Without Nix, make sure you have Node.js 20+, then:
+Without Nix, make sure you have Node.js 22.13+ (when `node:sqlite` became unflagged), then:
 
 ```bash
 npm install
