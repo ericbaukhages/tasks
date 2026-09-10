@@ -1,8 +1,17 @@
 build:
-	echo "TODO: Building..."
-
-serve: test build
-	echo "TODO: Serving..."
+	npm run build
 
 test:
-	echo "TODO: Testing..."
+	npm run test
+
+serve:
+	npm run serve
+
+mcp:
+	npm run mcp
+
+dev-web:
+	npm run dev --workspace=web
+
+check:
+	nix flake check
