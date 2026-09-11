@@ -14,7 +14,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "clean": "rm -rf packages/*/dist server/dist web/dist web/dist-test data *.tsbuildinfo web/*.tsbuildinfo web/vite.config.js web/vite.config.d.ts",
+    "clean": "rm -rf packages/*/dist packages/*/*.tsbuildinfo server/dist server/*.tsbuildinfo web/dist web/dist-test data *.tsbuildinfo web/*.tsbuildinfo web/vite.config.js web/vite.config.d.ts",
     "serve": "npm run serve --workspace=server",
     "mcp": "npm run mcp --workspace=server",
     "dev-web": "npm run dev --workspace=web"
