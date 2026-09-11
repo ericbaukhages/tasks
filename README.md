@@ -117,6 +117,17 @@ Or inspect it with the MCP Inspector:
 npx @modelcontextprotocol/inspector node server/dist/mcp/server.js
 ```
 
+### Using with AI assistants
+
+The MCP server exposes two prompts and two resources to help agents understand how to set up and use Tasks:
+
+- **Prompt: `setup_guide`** — installation, build, and MCP client configuration steps.
+- **Prompt: `usage_guide`** — conventions for when to create, complete, or delete tasks.
+- **Resource: `tasks://docs/setup`** — the same setup guide as a markdown resource.
+- **Resource: `tasks://docs/usage`** — the same usage guide as a markdown resource.
+
+If you are pointing an agent at this repository, it can read this README or request the `setup_guide` prompt to suggest a working MCP client configuration.
+
 ## Architecture
 
 ```text

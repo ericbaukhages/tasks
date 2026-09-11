@@ -49,6 +49,27 @@ async function callTool(
   return res
 }
 
+async function getPromptText(client: Client, name: string): Promise<string> {
+  const res = await client.getPrompt({ name })
+  const first = res.messages[0]
+  if (!first || typeof first.content !== 'object' || first.content === null) {
+    return ''
+  }
+  if ('text' in first.content && typeof first.content.text === 'string') {
+    return first.content.text
+  }
+  return ''
+}
+
+async function readResourceText(client: Client, uri: string): Promise<string> {
+  const res = await client.readResource({ uri })
+  const first = res.contents[0]
+  if (!first || !('text' in first) || typeof first.text !== 'string') {
+    return ''
+  }
+  return first.text
+}
+
 async function createTestClient() {
   const transport = new StdioClientTransport({
     command: 'node',
@@ -167,5 +188,39 @@ describe('mcp/server', () => {
 
     const gone = await callTool(client, 'get_task', { id })
     assert.equal(gone.isError, true)
+  })
+
+  it('lists prompts', async () => {
+    const prompts = await client.listPrompts()
+    const names = prompts.prompts.map((p) => p.name)
+    assert.deepEqual(names.sort(), ['setup_guide', 'usage_guide'])
+  })
+
+  it('returns setup guide prompt', async () => {
+    const text = await getPromptText(client, 'setup_guide')
+    assert.ok(text.includes('Tasks MCP Server'))
+    assert.ok(text.includes('Configure your MCP client'))
+  })
+
+  it('returns usage guide prompt', async () => {
+    const text = await getPromptText(client, 'usage_guide')
+    assert.ok(text.includes('When to create a task'))
+  })
+
+  it('lists resources', async () => {
+    const resources = await client.listResources()
+    const uris = resources.resources.map((r) => r.uri)
+    assert.deepEqual(uris.sort(), ['tasks://docs/setup', 'tasks://docs/usage'])
+  })
+
+  it('reads setup guide resource', async () => {
+    const text = await readResourceText(client, 'tasks://docs/setup')
+    assert.ok(text.includes('Tasks MCP Server'))
+    assert.ok(text.includes('Configure your MCP client'))
+  })
+
+  it('reads usage guide resource', async () => {
+    const text = await readResourceText(client, 'tasks://docs/usage')
+    assert.ok(text.includes('When to create a task'))
   })
 })

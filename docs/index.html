@@ -208,6 +208,26 @@ just lint
 just serve
 just dev-web</code></pre>
 
+      <h2>Agent setup</h2>
+      <p>
+        The MCP server also exposes setup and usage guides as prompts and resources, so an AI
+        assistant pointed at this project can suggest how to install, build, and configure it:
+      </p>
+      <ul>
+        <li><code>setup_guide</code> prompt — install, build, and MCP client configuration.</li>
+        <li><code>usage_guide</code> prompt — when to create, complete, or delete tasks.</li>
+        <li><code>tasks://docs/setup</code> resource — setup guide as markdown.</li>
+        <li><code>tasks://docs/usage</code> resource — usage guide as markdown.</li>
+      </ul>
+      <p>
+        See the
+        <a
+          href="https://github.com/ericbaukhages/tasks/blob/main/README.md#using-with-ai-assistants"
+          >README</a
+        >
+        for the exact MCP client configuration.
+      </p>
+
       <h2>Architecture</h2>
       <pre><code>                    Web UI  (React + Vite)
                        │

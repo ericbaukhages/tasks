@@ -10,6 +10,7 @@ import { mapErrorToStatus } from '../application/errors.js'
 import { descriptionSchema, taskIdParamSchema } from '../application/validation.js'
 import { createTaskService } from '../application/bootstrap.js'
 import { defaultDbPath } from '../config.js'
+import { setupGuide, usageGuide } from './guides.js'
 
 function formatTask(task: Task) {
   return `Task ${task.id}: ${task.description} (${task.status}) created ${task.createdAt}${
@@ -33,6 +34,25 @@ function handleError(err: unknown) {
   return { content: [textItem(`Error: ${message}`)], isError: true }
 }
 
+function promptMessage(text: string) {
+  return {
+    description: 'Guidance for using the Tasks MCP server.',
+    messages: [{ role: 'user' as const, content: { type: 'text' as const, text } }],
+  }
+}
+
+function resourceContents(uri: string, text: string) {
+  return {
+    contents: [
+      {
+        uri,
+        mimeType: 'text/markdown',
+        text,
+      },
+    ],
+  }
+}
+
 const packageJsonSchema = z.object({
   name: z.string(),
   version: z.string(),
@@ -53,7 +73,8 @@ export function startMcpServer(dbPath: string) {
   server.registerTool(
     'create_task',
     {
-      description: 'Create a new task with a description.',
+      description:
+        'Create a new task with a description. Use this when the user asks to remember, track, or follow up on something.',
       inputSchema: { description: descriptionSchema },
       outputSchema: taskSchema,
     },
@@ -70,7 +91,8 @@ export function startMcpServer(dbPath: string) {
   server.registerTool(
     'list_tasks',
     {
-      description: 'List tasks. Defaults to all non-deleted tasks.',
+      description:
+        'List tasks. Defaults to all non-deleted tasks. Use this to check the current workload or find a task ID.',
       inputSchema: { status: taskStatusSchema.optional() },
       outputSchema: z.object({ tasks: z.array(taskSchema) }),
     },
@@ -91,7 +113,7 @@ export function startMcpServer(dbPath: string) {
   server.registerTool(
     'get_task',
     {
-      description: 'Get a single task by its ID.',
+      description: 'Get a single task by its ID. Use this when the user refers to a specific task.',
       inputSchema: taskIdParamSchema.shape,
       outputSchema: taskSchema,
     },
@@ -108,7 +130,8 @@ export function startMcpServer(dbPath: string) {
   server.registerTool(
     'complete_task',
     {
-      description: 'Mark a task as completed.',
+      description:
+        'Mark a task as completed. Only use this after confirming the work is done or the user says it is done.',
       inputSchema: taskIdParamSchema.shape,
       outputSchema: taskSchema,
     },
@@ -125,7 +148,8 @@ export function startMcpServer(dbPath: string) {
   server.registerTool(
     'delete_task',
     {
-      description: 'Soft-delete a task by its ID.',
+      description:
+        'Soft-delete a task by its ID. Only use this when the user explicitly asks to remove, cancel, or delete a task.',
       inputSchema: taskIdParamSchema.shape,
       outputSchema: taskSchema,
     },
@@ -140,6 +164,44 @@ export function startMcpServer(dbPath: string) {
         return handleError(err)
       }
     },
+  )
+
+  server.registerPrompt(
+    'setup_guide',
+    {
+      description:
+        'Returns setup instructions for installing, building, and configuring the Tasks MCP server. Use this when the user asks how to set up or configure the Tasks MCP server.',
+    },
+    () => promptMessage(setupGuide),
+  )
+
+  server.registerPrompt(
+    'usage_guide',
+    {
+      description:
+        'Returns usage conventions for the Tasks MCP server, including when to create, complete, or delete tasks. Use this when the user asks how to use the Tasks MCP server or what the tools are for.',
+    },
+    () => promptMessage(usageGuide),
+  )
+
+  server.registerResource(
+    'setup_guide',
+    'tasks://docs/setup',
+    {
+      description: 'Setup instructions for the Tasks MCP server.',
+      mimeType: 'text/markdown',
+    },
+    () => resourceContents('tasks://docs/setup', setupGuide),
+  )
+
+  server.registerResource(
+    'usage_guide',
+    'tasks://docs/usage',
+    {
+      description: 'Usage conventions for the Tasks MCP server.',
+      mimeType: 'text/markdown',
+    },
+    () => resourceContents('tasks://docs/usage', usageGuide),
   )
 
   return { server, repo }
